@@ -10,9 +10,9 @@ public class Start {
         while (true) {
             System.out.println();
 
-            System.out.println("===== BUDGET =====");
-            System.out.println("[1]addAccount [2]showAccount [3]deleteAll [4]deleteItem [5]EXIT");
-            System.out.println("==================");
+            System.out.println("=========================================== BUDGET ===========================================");
+            System.out.println("[1]addAccount [2]showAccount [3]deleteAll [4]deleteItem [5]EXIT [6]showTotal [7]updateAccount");
+            System.out.println("==============================================================================================");
 
             int menu;
 
@@ -35,6 +35,8 @@ public class Start {
                 case 3: book.deleteAll(); break;
                 case 4: book.deleteItem(); break;
                 case 5: System.out.println("EXIT"); return;
+                case 6: book.showTotal(); break;
+                case 7: book.updateAccount(); break;
                 default: System.out.println("WRONG NUMBER");
             }
         }
