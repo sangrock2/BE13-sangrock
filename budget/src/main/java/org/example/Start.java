@@ -14,8 +14,18 @@ public class Start {
             System.out.println("[1]addAccount [2]showAccount [3]deleteAll [4]deleteItem [5]EXIT");
             System.out.println("==================");
 
-            System.out.print("Enter your choice: ");
-            int menu = Integer.parseInt(sc.nextLine());
+            int menu;
+
+            while (true) {
+                try {
+                    System.out.print("Enter your choice: ");
+                    menu = Integer.parseInt(sc.nextLine());
+                    break;
+                } catch (NumberFormatException e) {
+                    System.out.println("Please enter a NUMBER.");
+                    System.out.println();
+                }
+            }
 
             System.out.println();
 

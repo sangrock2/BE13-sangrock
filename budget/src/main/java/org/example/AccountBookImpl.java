@@ -11,15 +11,24 @@ public class AccountBookImpl implements AccountBook {
         System.out.print("Enter Date: ");
         String date = sc.nextLine();
 
-        List<Item> items = new ArrayList<>();
+        List<Item> items = data.computeIfAbsent(date, k -> new ArrayList<>());
 
         mainLoop:
         while (true) {
             System.out.print("Enter Item: ");
             String itemName = sc.nextLine();
 
-            System.out.print("Enter Price: ");
-            int price = Integer.parseInt(sc.nextLine());
+            int price;
+            while (true) {
+                try {
+                    System.out.print("Enter Price: ");
+                    price = Integer.parseInt(sc.nextLine());
+                    break;
+                } catch (NumberFormatException e) {
+                    System.out.println("Please enter a NUMBER.");
+                    System.out.println();
+                }
+            }
 
             items.add(new Item(itemName, price));
 
@@ -44,7 +53,7 @@ public class AccountBookImpl implements AccountBook {
             System.out.printf("%s : %d KRW \n", item.getName(), item.getPrice());
         });
 
-        int total = items.stream().mapToInt(item -> item.getPrice()).sum();
+        int total = items.stream().mapToInt(Item::getPrice).sum();
 
         System.out.println("==================");
         System.out.printf("Total : %d KRW\n", total);
@@ -78,13 +87,25 @@ public class AccountBookImpl implements AccountBook {
 
         System.out.printf("[%s]\n", date);
 
-        data.get(date).forEach(item -> {
+        List<Item> items = data.get(date);
+
+        items.forEach(item -> {
             System.out.printf("%s : %d KRW \n", item.getName(), item.getPrice());
         });
+
+        int total = items.stream().mapToInt(Item::getPrice).sum();
+
+        System.out.println("==================");
+        System.out.printf("Total : %d KRW\n", total);
     }
 
     @Override
     public void deleteAll() {
+        if (data.isEmpty()) {
+            System.out.println("Data not found");
+            return;
+        }
+
         System.out.print("Enter delete date : ");
         String date = sc.nextLine();
         System.out.println();
@@ -100,6 +121,11 @@ public class AccountBookImpl implements AccountBook {
 
     @Override
     public void deleteItem() {
+        if (data.isEmpty()) {
+            System.out.println("Data not found");
+            return;
+        }
+
         System.out.print("Enter delete date : ");
         String date = sc.nextLine();
         System.out.println();
@@ -116,7 +142,17 @@ public class AccountBookImpl implements AccountBook {
             System.out.printf("%d. %s : %s KRW \n", i+1, item.getName(), item.getPrice());
         }
 
-        int deleteIdx = Integer.parseInt(sc.nextLine());
+        int deleteIdx;
+
+        while (true) {
+            try {
+                System.out.print("Enter item number to delete: ");
+                deleteIdx = Integer.parseInt(sc.nextLine());
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a NUMBER.");
+            }
+        }
 
         if (deleteIdx > 0 && deleteIdx <= items.size()) {
             items.remove(deleteIdx-1);
