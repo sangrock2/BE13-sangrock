@@ -1,0 +1,15 @@
+[강사님 Github]
+https://github.com/DongWoonKim/programmers-dev-lect/tree/master
+https://github.com/DongWoonKim/programmers-dev-lect/tree/master/%EA%B3%BC%EC%A0%9C
+
+[프로그래머스]
+대시보드 : https://school.programmers.co.kr/app/courses/26002/dashboard
+50 days : https://school.programmers.co.kr/app/courses/25964/curriculum#part-96636
+
+
+
+[책]
+스프링 입문을 위한 객체지향의 원리와 이해(스프링부트)
+토비의 스프링(스프링 철학)
+포도책(분산환경)
+Real MySQL 8.0 1권 (DB)
