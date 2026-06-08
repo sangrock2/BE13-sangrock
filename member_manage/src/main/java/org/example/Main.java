@@ -1,31 +1,16 @@
 package org.example;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
-    static int totalCnt = 0;
-    static int memberCnt = 0;
     static Scanner sc = new Scanner(System.in);
-
-    public static int printPricePlan() {
-        System.out.println("===============================================================");
-        System.out.println("[Select pricing plan]");
-        System.out.println("[1]Lite : 10 people [2]Basic : 20 people [3]Premium : 30 people");
-        System.out.println("===============================================================");
-        System.out.println();
-
-        System.out.print("Enter your choice: ");
-        int num = sc.nextInt();
-        sc.nextLine();
-        System.out.println();
-
-        return num;
-    }
+    static String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 
     public static int printMenu(int memberCnt) {
         System.out.println();
         System.out.println("==============================================");
-        System.out.printf("[Select the task - Current membership : %d/%d]\n", memberCnt, totalCnt);
+        System.out.printf("[Select the task - Current membership : %d]\n", memberCnt);
         System.out.println("[1]AddMember [2]selectEmail [3]selectName");
         System.out.println("[4]selectAll [5]updateMember [6]deleteMember");
         System.out.println("[7]EXIT");
@@ -40,18 +25,18 @@ public class Main {
         return choice;
     }
 
-    public static void addMember(String[][] members) {
-        if (memberCnt == totalCnt) {
-            System.out.println("The member are full\n");
-            return;
-        }
-
+    public static void addMember(ArrayList<Member> members) {
         String email = "";
 
         while (true) {
             System.out.print("Please enter your email : ");
             email = sc.nextLine().trim();
             System.out.println();
+
+            if (!email.matches(emailRegex)) {
+                System.out.println("Invalid email format. \n");
+                continue;
+            }
 
             if (!checkEmail(members, email)) {
                 break;
@@ -69,25 +54,19 @@ public class Main {
         String phone = sc.nextLine().trim();
         System.out.println();
 
-        members[memberCnt][0] = name;
-        members[memberCnt][1] = email;
-        members[memberCnt][2] = phone;
-
-        memberCnt++;
+        members.add(new Member(name, email, phone));
         System.out.println("Your membership has been successfully added");
     }
 
-    public static void selectEmail(String[][] members) {
+    public static void selectEmail(ArrayList<Member> members) {
         System.out.print("Please enter select email : ");
         String email = sc.nextLine().trim();
         System.out.println();
 
-        for (int i = 0; i < members.length; i++) {
-            if (email.equals(members[i][1])) {
-                System.out.println("[Name] " + members[i][0] +
-                        ", [Email] " + members[i][1] +
-                        ", [Phone] " + members[i][2]);
-
+        for (Member member : members) {
+            if (member.getEmail().equals(email)) {
+                System.out.println(member.toString());
+                System.out.println();
                 return;
             }
         }
@@ -95,59 +74,74 @@ public class Main {
         System.out.println("Data not found\n");
     }
 
-    public static void selectName(String[][] members) {
-        System.out.println("Please enter select name : ");
+    public static void selectName(ArrayList<Member> members) {
+        System.out.print("Please enter select name : ");
         String name = sc.nextLine().trim();
         System.out.println();
 
-        for (int i = 0; i < members.length; i++) {
-            if (name.equals(members[i][0])) {
-                System.out.println("[Name] " + members[i][0] +
-                        ", [Email] " + members[i][1] +
-                        ", [Phone] " + members[i][2]);
+        boolean isFound = false;
 
-                return;
+        for (Member member : members) {
+            if (member.getName().equals(name)) {
+                System.out.println(member.toString());
+                isFound = true;
             }
         }
 
-        System.out.println("Data not found\n");
+        if (!isFound) {
+            System.out.println("Data not found\n");
+        }
     }
 
-    public static boolean checkEmail(String[][] members, String email) {
-        for (int i = 0; i < members.length; i++) {
-            if (email.equals(members[i][1])) return true; // 이미 있음
+    public static boolean checkEmail(ArrayList<Member> members, String email) {
+        for (Member member : members) {
+            if (member.getEmail().equals(email)) {
+                return true;
+            }
         }
 
         return false;
     }
 
-    public static void selectAll(String[][] members) {
-        for (int i = 0; i < memberCnt; i++) {
-            System.out.println("[Name] " + members[i][0] +
-                    ", [Email] " + members[i][1] +
-                    ", [Phone] " + members[i][2]);
+    public static void selectAll(ArrayList<Member> members) {
+        if (!members.isEmpty()) {
+            for (Member member : members) {
+                System.out.println(member.toString());
+            }
         }
     }
 
-    public static void updateMember(String[][] members) {
+    public static void updateMember(ArrayList<Member> members) {
         System.out.print("Please enter update email : ");
         String email = sc.nextLine().trim();
         System.out.println();
 
-        int idx = -1;
+        Member targetMember = null;
 
-        for (int i = 0; i < members.length; i++) {
-            if (email.equals(members[i][1])) { idx = i; break; }
+        for (Member member : members) {
+            if (member.getEmail().equals(email)) {
+                targetMember = member;
+            }
         }
 
-        if (idx == -1) { System.out.println("Data not found\n"); return; }
+        if (targetMember == null) {
+            System.out.println("Data not found\n");
+            return;
+        }
+
+        String newEmail = "";
 
         while (true) {
             System.out.print("Please enter new email : ");
-            email = sc.nextLine().trim();
+            newEmail = sc.nextLine().trim();
             System.out.println();
 
-            if (!checkEmail(members, email)) {
+            if (!newEmail.matches(emailRegex)) {
+                System.out.println("Invalid email format. \n");
+                continue;
+            }
+
+            if (!checkEmail(members, newEmail)) {
                 break;
             } else {
                 System.out.println("Please enter valid email");
@@ -156,53 +150,41 @@ public class Main {
         }
 
         System.out.print("Please enter new name : ");
-        String name = sc.nextLine().trim();
+        String newName = sc.nextLine().trim();
         System.out.println();
 
         System.out.print("Please enter new phone number : ");
-        String phone = sc.nextLine().trim();
+        String newPhone = sc.nextLine().trim();
         System.out.println();
 
-        members[idx][0] = name;
-        members[idx][1] = email;
-        members[idx][2] = phone;
+        targetMember.setEmail(newEmail);
+        targetMember.setName(newName);
+        targetMember.setPhone(newPhone);
 
         System.out.println("Your membership has been successfully updated");
     }
 
-    public static void deleteMember(String[][] members) {
+    public static void deleteMember(ArrayList<Member> members) {
         System.out.print("Please enter delete email : ");
         String email = sc.nextLine().trim();
         System.out.println();
 
-        int idx = -1;
-
-        for (int i = 0; i < members.length; i++) {
-            if (email.equals(members[i][1])) { idx = i; break; }
+        for (int i = 0; i < members.size(); i++) {
+            if (members.get(i).getEmail().equals(email)) {
+                members.remove(i);
+                System.out.println("Your membership has been successfully deleted");
+                return;
+            }
         }
 
-        if (idx == -1) { System.out.println("Data not found\n"); return; }
-
-        memberCnt--;
-
-        for (int i = idx; i < members.length - 1; i++) {
-            members[i][0] = members[i + 1][0];
-            members[i][1] = members[i + 1][1];
-            members[i][2] = members[i + 1][2];
-        }
-
-        members[memberCnt][0] = null;
-        members[memberCnt][1] = null;
-        members[memberCnt][2] = null;
+        System.out.println("Data not found\n");
     }
 
     public static void main(String[] args) {
-        int num = printPricePlan();
-        String[][] members = new String[num * 10][3];
-        totalCnt = num * 10;
+        ArrayList<Member> members = new ArrayList<>();
 
         while (true) {
-            int choice = printMenu(memberCnt);
+            int choice = printMenu(members.size());
 
             switch (choice) {
                 case 1: addMember(members); break;
