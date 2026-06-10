@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
-    static Scanner sc = new Scanner(System.in);
-    static String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    private Scanner sc = new Scanner(System.in);
+    private MemberManager manager = new MemberManager();
+    private final String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 
-    public static int printMenu(int memberCnt) {
+    public int printMenu() {
         System.out.println();
         System.out.println("==============================================");
-        System.out.printf("[Select the task - Current membership : %d]\n", memberCnt);
+        System.out.printf("[Select the task - Current membership : %d]\n", manager.getMemberCount());
         System.out.println("[1]AddMember [2]selectEmail [3]selectName");
         System.out.println("[4]selectAll [5]updateMember [6]deleteMember");
         System.out.println("[7]EXIT");
@@ -25,8 +26,8 @@ public class Main {
         return choice;
     }
 
-    public static void addMember(ArrayList<Member> members) {
-        String email = "";
+    public void addMember() {
+        String email;
 
         while (true) {
             System.out.print("Please enter your email : ");
@@ -38,11 +39,10 @@ public class Main {
                 continue;
             }
 
-            if (!checkEmail(members, email)) {
-                break;
+            if (manager.isEmailExist(email)) {
+                System.out.println("Email already exists. Please enter another email.\n");
             } else {
-                System.out.println("Please enter valid email");
-                System.out.println();
+                break;
             }
         }
 
@@ -54,148 +54,123 @@ public class Main {
         String phone = sc.nextLine().trim();
         System.out.println();
 
-        members.add(new Member(name, email, phone));
+        manager.addMember(new Member(name, email, phone));
+
         System.out.println("Your membership has been successfully added");
     }
 
-    public static void selectEmail(ArrayList<Member> members) {
+    public void selectEmail() {
         System.out.print("Please enter select email : ");
         String email = sc.nextLine().trim();
-        System.out.println();
 
-        for (Member member : members) {
-            if (member.getEmail().equals(email)) {
-                System.out.println(member.toString());
-                System.out.println();
-                return;
-            }
+        Member member = manager.findByEmail(email);
+
+        if (member != null) {
+            System.out.println("\n" + member.toString());
+        } else {
+            System.out.println("Invalid email format. \n");
         }
-
-        System.out.println("Data not found\n");
     }
 
-    public static void selectName(ArrayList<Member> members) {
-        System.out.print("Please enter select name : ");
+    public void selectName() {
+        System.out.print("Please enter your name : ");
         String name = sc.nextLine().trim();
-        System.out.println();
 
-        boolean isFound = false;
+        ArrayList<Member> members = manager.findByName(name);
 
-        for (Member member : members) {
-            if (member.getName().equals(name)) {
+        if (!members.isEmpty()) {
+            System.out.println();
+            for (Member member : members) {
                 System.out.println(member.toString());
-                isFound = true;
             }
-        }
-
-        if (!isFound) {
-            System.out.println("Data not found\n");
+        } else {
+            System.out.println("\nData not found");
         }
     }
 
-    public static boolean checkEmail(ArrayList<Member> members, String email) {
-        for (Member member : members) {
-            if (member.getEmail().equals(email)) {
-                return true;
-            }
-        }
+    public void selectAll() {
+        ArrayList<Member> members = manager.getAllMembers();
 
-        return false;
-    }
-
-    public static void selectAll(ArrayList<Member> members) {
         if (!members.isEmpty()) {
             for (Member member : members) {
                 System.out.println(member.toString());
             }
+        } else {
+            System.out.println("Data not found");
         }
     }
 
-    public static void updateMember(ArrayList<Member> members) {
+    public void updateMember() {
         System.out.print("Please enter update email : ");
         String email = sc.nextLine().trim();
-        System.out.println();
 
-        Member targetMember = null;
+        Member member = manager.findByEmail(email);
 
-        for (Member member : members) {
-            if (member.getEmail().equals(email)) {
-                targetMember = member;
-            }
+        if (member == null) {
+            System.out.println("Invalid email format. \n");
         }
 
-        if (targetMember == null) {
-            System.out.println("Data not found\n");
-            return;
-        }
-
-        String newEmail = "";
-
+        String newEmail;
         while (true) {
             System.out.print("Please enter new email : ");
             newEmail = sc.nextLine().trim();
-            System.out.println();
+
+            if (!manager.isEmailExist(newEmail)) {
+                break;
+            } else {
+                System.out.println("Email already exists. Please enter valid email\n");
+            }
 
             if (!newEmail.matches(emailRegex)) {
                 System.out.println("Invalid email format. \n");
                 continue;
             }
-
-            if (!checkEmail(members, newEmail)) {
-                break;
-            } else {
-                System.out.println("Please enter valid email");
-                System.out.println();
-            }
         }
 
         System.out.print("Please enter new name : ");
         String newName = sc.nextLine().trim();
-        System.out.println();
 
         System.out.print("Please enter new phone number : ");
         String newPhone = sc.nextLine().trim();
-        System.out.println();
 
-        targetMember.setEmail(newEmail);
-        targetMember.setName(newName);
-        targetMember.setPhone(newPhone);
+        member.setEmail(newEmail);
+        member.setName(newName);
+        member.setPhone(newPhone);
 
         System.out.println("Your membership has been successfully updated");
     }
 
-    public static void deleteMember(ArrayList<Member> members) {
+    public void deleteMember() {
         System.out.print("Please enter delete email : ");
         String email = sc.nextLine().trim();
         System.out.println();
 
-        for (int i = 0; i < members.size(); i++) {
-            if (members.get(i).getEmail().equals(email)) {
-                members.remove(i);
-                System.out.println("Your membership has been successfully deleted");
-                return;
-            }
+        if (manager.deleteMember(email)) {
+            System.out.println("Your membership has been successfully deleted");
+        } else {
+            System.out.println("Data not found\n");
         }
-
-        System.out.println("Data not found\n");
     }
 
-    public static void main(String[] args) {
-        ArrayList<Member> members = new ArrayList<>();
-
+    public void start() {
         while (true) {
-            int choice = printMenu(members.size());
+            int choice = printMenu();
 
             switch (choice) {
-                case 1: addMember(members); break;
-                case 2: selectEmail(members); break;
-                case 3: selectName(members); break;
-                case 4: selectAll(members); break;
-                case 5: updateMember(members); break;
-                case 6: deleteMember(members); break;
+                case 1: addMember(); break;
+                case 2: selectEmail(); break;
+                case 3: selectName(); break;
+                case 4: selectAll(); break;
+                case 5: updateMember(); break;
+                case 6: deleteMember(); break;
                 case 7: System.out.println("thank you"); return;
                 default: System.out.println("Enter valid choice");
             }
         }
+    }
+
+    public static void main(String[] args) {
+        Main main = new Main();
+        main.start();
     }
 }
