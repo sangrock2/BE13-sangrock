@@ -34,7 +34,7 @@ public class Main {
                         break;
                     }
 
-                    System.out.print("Grade [1]Normal [2]VIP [3]VVIP > ");
+                    System.out.println("Grade [1]Normal [2]VIP");
                     int grade = Integer.parseInt(sc.nextLine());
 
                     System.out.print("Name > ");
@@ -49,16 +49,7 @@ public class Main {
                     if (manager.existsEmail(email)) {
                         System.out.println("Email already exists");
                     } else {
-                        Member m = new NormalMember(name, email, phone);
-
-                        if (grade == 2) {
-                            m = new VipMember(name, email, phone);
-                        } else if (grade == 3) {
-                            m = new VvipMember(name, email, phone);
-                        } else {
-                            System.out.println("Invalid grade selected. Default value is Normal grade");
-                        }
-
+                        Member m = (grade == 2) ? new VipMember(name, email, phone) : new NormalMember(name, email, phone);
                         manager.add(m);
                         System.out.println("Member added successfully!");
                     }
@@ -70,6 +61,7 @@ public class Main {
 
                     if (foundByEmail != null) {
                         foundByEmail.printInfo();
+                        foundByEmail.printGreeting();
                     } else {
                         System.out.println("Data not found.");
                     }
