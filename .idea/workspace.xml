@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="66183589-d23b-4d5a-be91-af11aa73827b" name="변경" comment="">
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/Grade.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/Member.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/MemberManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/MemberRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/PricePlan.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/member_manage_final/src/main/java/org/example/StandardMember.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/member_manage_abstract/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/member_manage_abstract/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="3FDA3X9EqvK9TK3ezfMOXSXPCJs" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.22562.218" />
+        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-IU-243.22562.218" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="애플리케이션 수준" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="디폴트 작업">
+      <changelist id="66183589-d23b-4d5a-be91-af11aa73827b" name="변경" comment="" />
+      <created>1781599069026</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1781599069026</updated>
+      <workItem from="1781599070502" duration="2000" />
+    </task>
+    <servers />
+  </component>
+</project>
