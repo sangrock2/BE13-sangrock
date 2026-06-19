@@ -13,4 +13,6 @@ public interface MemberRepository {
 
     boolean existsEmail(String email);
     boolean update(String oldEmail, String name, String newEmail, String phone);
+
+    void save();
 }

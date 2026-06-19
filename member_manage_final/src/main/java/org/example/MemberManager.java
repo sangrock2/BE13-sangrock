@@ -1,14 +1,18 @@
 package org.example;
 
+import java.io.*;
 import java.util.*;
 
 public class MemberManager implements MemberRepository{
+    private static final String FILE = "members.dat";
+
     private Map<String, Member> members;
     private int capacity;
 
     public MemberManager(int capacity) {
         this.members = new HashMap<>();
         this.capacity = capacity;
+        load();
     }
 
     public boolean existsEmail(String email) {
@@ -38,7 +42,8 @@ public class MemberManager implements MemberRepository{
 
     @Override
     public boolean delete(String email) {
-        return members.remove(email) != null;
+        members.remove(email);
+        return true;
     }
 
     @Override
@@ -68,5 +73,30 @@ public class MemberManager implements MemberRepository{
         }
 
         return true;
+    }
+
+    @Override
+    public void save() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE))) {
+            out.writeInt(capacity);
+            out.writeObject(members);
+        } catch (IOException e) {
+            System.out.println("Error saving file");
+        }
+    }
+
+    public void load() {
+        File file = new File(FILE);
+
+        if (!file.exists()) {
+            return;
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            this.capacity = in.readInt();
+            this.members = (Map<String, Member>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading file: " + e.getMessage());
+        }
     }
 }

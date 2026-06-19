@@ -1,5 +1,6 @@
 package org.example;
 
+import java.io.File;
 import java.util.List;
 import java.util.Scanner;
 
@@ -15,14 +16,22 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("Select plan: [1]Lite(10) [2]Basic(20) [3]Premium(30)");
-        System.out.print("> ");
-        int planChoice = readInt(sc);
+        int fileCapacity = 0;
+        File file = new File("members.dat");
 
-        PricePlan plan = PricePlan.from(planChoice * 10);
-        if (plan == null) plan = PricePlan.LITE;
+        if (file.exists()) {
+            System.out.println("File exists");
+        } else {
+            System.out.println("Select plan: [1]Lite(10) [2]Basic(20) [3]Premium(30)");
+            System.out.print("> ");
+            int planChoice = readInt(sc);
 
-        MemberRepository manager = new MemberManager(plan.getCapacity());
+            PricePlan plan = PricePlan.from(planChoice * 10);
+            if (plan == null) plan = PricePlan.LITE;
+            fileCapacity = plan.getCapacity();
+        }
+
+        MemberRepository manager = new MemberManager(fileCapacity);
 
         while (true) {
             System.out.println("\n========== Member Management ==========");
@@ -34,6 +43,7 @@ public class Main {
             int choice = readInt(sc);
 
             if (choice == 7) {
+                manager.save();
                 System.out.println("EXIT");
                 break;
             }

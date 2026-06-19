@@ -1,6 +1,8 @@
 package org.example;
 
-public interface Member extends Comparable<Member> {
+import java.io.Serializable;
+
+public interface Member extends Comparable<Member>, Serializable {
     String getName();
     String getEmail();
     String getPhone();
