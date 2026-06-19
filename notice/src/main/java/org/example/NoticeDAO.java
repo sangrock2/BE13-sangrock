@@ -1,5 +1,7 @@
 package org.example;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class NoticeDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
         ) {
             ps.setString(1, userId);
-            ps.setString(2, password);
+            ps.setString(2, hashPassword(password));
             ps.setString(3, name);
 
             return ps.executeUpdate() > 0;
@@ -68,7 +70,9 @@ public class NoticeDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    if (rs.getString("password").equals(password)) {
+                    String hashedPassword = hashPassword(password);
+
+                    if (rs.getString("password").equals(hashedPassword)) {
                         return new SignInResponseDTO(true, rs.getString("user_id"), rs.getString("name"));
                     } else {
                         return new SignInResponseDTO(false, null, null);
@@ -203,6 +207,28 @@ public class NoticeDAO {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error deleting user's contents.", e);
+        }
+    }
+
+    public String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder sb = new StringBuilder();
+
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+
+                if (hex.length() == 1) {
+                    sb.append('0');
+                }
+
+                sb.append(hex);
+            }
+
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Password Hashing Error", e);
         }
     }
 }
