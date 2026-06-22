@@ -1,0 +1,30 @@
+package org.example.springfirst.oh01.ex_1_1;
+
+import org.example.springfirst.oh01.ex_1_1.dao.UserDAO;
+import org.example.springfirst.oh01.ex_1_1.domain.User;
+
+import java.sql.SQLException;
+
+// 관심사의 분리 : 객체를 설계할 때 미래의 변화에 어떻게 대비할 것인가가 중요
+// 분리와 확장을 고려한 설계의 유무가 중요하다
+// 고객의 요구사항에서 나오는 모든 변경과 발전은 한 번에 한 가지 관심사에 집중해서 일어난다.
+// 문제는, 변화는 대체로 한 가지 관심사에 집중되지만 그에 따른 작업은 코드 여기저기로 흩어지는 경우가 많다는 점이다.
+// 변화가 한 가지 관심사에 집중되어 일어난다면, 우리가 준비할 일은 그 관심사가 코드의 한곳에 모이게 하는 것이다.
+// 즉, 관심이 같은 것끼리는 모으고 관심이 다른 것은 따로 떨어뜨려 놓는 것이다.
+
+// 프로그래밍의 기초 개념 중에 '관심사의 분리'가 있다.
+// 이를 객체지향에 적용하면, 관심이 같은 것끼리는 하나의 객체 안에 또는 가까운 객체로 모으고,
+// 관심이 다른 것은 가능한 한 떨어뜨려 서로 영향을 주지 않게 분리하는 것이라고 볼 수 있다.
+
+public class Start {
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+        UserDAO userDAO = new UserDAO();
+
+        User user = new User();
+        user.setId("test1");
+        user.setName("test2");
+        user.setPassword("test3");
+
+        userDAO.add(user);
+    }
+}
