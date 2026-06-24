@@ -1,0 +1,20 @@
+package org.example.springfirst.ch03.ex_3_1.dao;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+// DaoFactory를 스프링 빈 팩토리가 사용할 수 있는 설정정보로 리팩토링
+
+@Configuration
+public class DaoFactory {
+
+    @Bean
+    public UserDAO userDAO() {
+        return new UserDAO(connectionMaker());
+    }
+
+    @Bean
+    public ConnectionMaker connectionMaker() {
+        return new NConnectionMaker();
+    }
+}
