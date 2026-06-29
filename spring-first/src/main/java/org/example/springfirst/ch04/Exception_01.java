@@ -1,0 +1,59 @@
+package org.example.springfirst.ch04;
+
+// 예외
+// 예외가 발생하면 catch로 잡았는데 별다른 처리 없이 넘어가 버리면 위험하다
+// 프로그램 실행 중 어디선가 예외가 발생하는데 그것을 무시하고 진행하는것이기 때뭄ㄴ
+// 예외를 처리할 때 반드시 지켜야할 핵심 원칙 : 적절하게 복귀되든지 아니면 작업을 중단시키고 운영자(개발자)에게 분명하게 통보되어야한다.
+
+// * 예외의 종류 (자바에서 throw 할 수 있는 객체는 모두 Throwable의 자식이다)
+// 1) Error
+// - java.lang.Error의 자식. 시스템 레벨의 심각한 오류(OutOfMemoryError 등).
+// - 애플리케이션 코드가 잡아서 대응할 수 있는 게 아니므로 catch 하려 하지 않는다.
+// 2) Checked Exception (체크 예외)
+// - Exception의 자식 중 RuntimeException을 '상속하지 않은' 것들(IOException, SQLException 등).
+// - 반드시 catch 하거나 throws로 선언해야 컴파일된다(컴파일러가 강제).
+// - 그래서 잘못 쓰면 아래 '안티패턴'들이 나오기 쉽다.
+// 3) Unchecked Exception (언체크 예외, 런타임 예외)
+// - RuntimeException의 자식(NullPointerException, IllegalArgumentException 등).
+// - catch/throws를 강제하지 않는다. 주로 '프로그램의 버그' 성격이라, 복구보다 코드 수정 대상이다.
+
+import java.sql.SQLException;
+
+public class Exception_01 {
+    // 안티패턴 1 : 예외블랙홀 - 아무것도 하지 않음
+    // 예외가 났다는 사실 자체가 흔적도 없이 사라진다. 프로그램은 아무 일 없다는 듯 계속 진행된다.
+    // 가장 위험하다. 나중에 엉뚱한 곳에서 문제가 터지고, 원인 추적이 거의 불가능해진다.
+    void exceptionBlackhole() {
+        try {
+            riskyjob();
+        } catch (SQLException e) {
+            // 아무것도 안함
+        }
+    }
+
+    // 안티패턴 2 : 찍기만하고 진행
+    // printStackTrace()나 println()으로 '찍는 것'은 예외를 '처리'한 것이 아니다.
+    // 운영 환경에선 그 출력이 묻혀서 아무도 못 보고, 프로그램은 잘못된 상태로 계속 동작한다.
+    void printGo() {
+        try {
+            riskyjob();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 안티패턴 3 : 무의미하고 무책임한 throws
+    // 어떤 예외가 왜 날 수 있는지 고민하지 않고, 그냥 throws Exception으로 전부 떠넘긴다.
+    // 이 메서드를 쓰는 쪽도 의미 있는 정보를 못 받고 똑같이 throws Exception으로 떠넘기게 된다.
+    void method1() throws Exception {
+        method2();
+    }
+
+    void method2() throws Exception {
+        throw new Exception();
+    }
+
+    void riskyjob() throws SQLException {
+
+    }
+}
