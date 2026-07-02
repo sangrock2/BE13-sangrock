@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:style="${theme == 'dark'} ? 'background-color: #333; color: white;' : 'background-color: white; color: black;'">
+<head>
+    <meta charset="UTF-8">
+    <title>대시보드 테스트</title>
+</head>
+<body>
+<h2>대시보드</h2>
+
+<p>환영합니다, <strong th:text="${username}">사용자</strong>님!</p>
+<p>현재 테마: <span th:text="${theme}">light</span></p>
+
+<p th:if="${lastVisit != null}">
+    마지막 방문 일시: <span th:text="${lastVisit}"></span>
+</p>
+
+<hr>
+
+<h3>테마 변경 테스트</h3>
+<a th:href="@{/theme(mode='light')}">Light 모드로 변경</a> |
+<a th:href="@{/theme(mode='dark')}">Dark 모드로 변경</a>
+
+<hr>
+
+<!-- 👇 로그아웃 버튼(링크) 추가 👇 -->
+<h3>로그아웃</h3>
+<a th:href="@{/logout}">
+    <button type="button">로그아웃 하기</button>
+</a>
+
+</body>
+</html>
