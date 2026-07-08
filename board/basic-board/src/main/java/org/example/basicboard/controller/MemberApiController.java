@@ -2,6 +2,7 @@ package org.example.basicboard.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.example.basicboard.constant.SessionConst;
 import org.example.basicboard.dto.LoginRequestDto;
 import org.example.basicboard.dto.LoginResponseDto;
 import org.example.basicboard.dto.MemberJoinRequestDto;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberApiController {
     private final MemberService memberService;
 
-    @GetMapping("/join")
+    @PostMapping("/join")
     public MemberJoinResponseDto join(@RequestBody MemberJoinRequestDto dto) {
         memberService.join(dto);
 
@@ -25,8 +26,8 @@ public class MemberApiController {
     @PostMapping("/login")
     public LoginResponseDto login(@RequestBody LoginRequestDto dto, HttpSession session) {
         return memberService.login(dto).map(member -> {
-            session.setAttribute("userId", member.getUserId());
-            session.setAttribute("userName", member.getUserName());
+            session.setAttribute(SessionConst.USER_ID, member.getUserId());
+            session.setAttribute(SessionConst.USER_NAME, member.getUserName());
 
             return LoginResponseDto.success();
         }).orElseGet(LoginResponseDto::fail);
