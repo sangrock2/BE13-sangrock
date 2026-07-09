@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.spring_mission_join.domain.entity.Board;
 import org.example.spring_mission_join.dto.*;
 import org.example.spring_mission_join.service.BoardService;
+import org.example.spring_mission_join.service.FileService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequestMapping("/api/boards")
 public class BoardApiController {
     private final BoardService boardService;
+    private final FileService fileService;
 
     @GetMapping
     public BoardListResponseDto getBoardList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
@@ -51,7 +53,7 @@ public class BoardApiController {
 
     @GetMapping("/file/download/{filenName}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filenName) {
-        Resource resource = boardService.downloadFile(filenName);
+        Resource resource = fileService.downloadFile(filenName);
 
         String encoded = URLEncoder.encode(resource.getFilename(), StandardCharsets.UTF_8)
                 .replaceAll("\\+", "%20");

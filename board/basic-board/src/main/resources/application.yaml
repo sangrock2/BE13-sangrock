@@ -5,6 +5,17 @@ spring:
     url: jdbc:mysql://localhost:3306/java_basic?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
     username: programmers
     password: password1234
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true; # sql을 보기 좋게 출력
   file:
     upload-dir: ./uploads
 
