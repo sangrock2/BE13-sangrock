@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.basicboard.domain.entity.Board;
 import org.example.basicboard.domain.repository.BoardRepository;
 import org.example.basicboard.dto.BoardDeleteRequestDto;
+import org.example.basicboard.dto.BoardListItemResponseDto;
+import org.example.basicboard.dto.BoardSearchRequestDto;
 import org.example.basicboard.dto.BoardUpdateRequestDto;
 import org.example.basicboard.exception.BoardNotFoundException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,5 +77,9 @@ public class BoardService {
 
         boardRepository.deleteById(id);
         fileService.deleteFile(dto.getFilePath());
+    }
+
+    public Page<BoardListItemResponseDto> searchBoard(BoardSearchRequestDto dto, Pageable pageable) {
+        return boardRepository.searchBoards(dto, pageable);
     }
 }
