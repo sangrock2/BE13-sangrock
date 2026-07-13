@@ -19,3 +19,7 @@ spring:
   file:
     upload-dir: ./uploads
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
