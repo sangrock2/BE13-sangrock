@@ -32,6 +32,10 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
+
+    public void update(String content) {
+        this.content = content;
+    }
 }
 
 // * FetchType.LAZY를 "직접 명시" 해야 하는 이유

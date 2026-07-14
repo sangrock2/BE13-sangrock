@@ -82,4 +82,8 @@ public class BoardService {
     public Page<BoardListItemResponseDto> searchBoard(BoardSearchRequestDto dto, Pageable pageable) {
         return boardRepository.searchBoards(dto, pageable);
     }
+
+    public Board getBoardWithComments(long id) {
+        return boardRepository.findWithComments(id).orElseThrow(() -> new BoardNotFoundException("[BOARD] Board not found : " + id));
+    }
 }

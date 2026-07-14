@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.basicboard.domain.entity.Board;
 import org.example.basicboard.dto.*;
+import org.example.basicboard.mapper.BoardMapper;
 import org.example.basicboard.service.BoardService;
 import org.example.basicboard.service.FileService;
 import org.springframework.core.io.Resource;
@@ -42,6 +43,7 @@ public class BoardApiController {
 
     private final BoardService boardService;
     private final FileService fileService;
+    private final BoardMapper boardMapper;
 
     @Operation(
             summary = "게시글 목록 조회",
@@ -79,17 +81,14 @@ public class BoardApiController {
 
     @Operation(summary = "게시글 작성", description = "제목/내용/작성자와 (선택적) 첨부파일을 multipart/form-data 로 받아 새 게시글을 저장한다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public void saveBoard(
-            @ModelAttribute BoardWriteRequestDto dto) {
+    public void saveBoard(@ModelAttribute BoardWriteRequestDto dto) {
         boardService.saveBoard(dto.getUserId(), dto.getTitle(), dto.getContent(), dto.getFile());
     }
 
     @Operation(summary = "게시글 상세 조회", description = "id로 게시글 한 건의 상세 내용을 조회한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "게시글 상세 조회 - 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
-            )
+            @ApiResponse(responseCode = "404", description = "게시글 상세 조회 - 없음", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/{id}")
     public BoardDetailResponseDto getBoardDetail(@PathVariable long id) {
@@ -104,14 +103,21 @@ public class BoardApiController {
                 .build();
     }
 
-    @Operation(summary = "첨부파일 다운로드",
-            description = "저장된 파일 이름으로 첨부파일을 내려받는다. Content-Disposition: attachment 로 브라우저가 다운로드하게 한다.")
+    // * 한글 파일명 인코딩
+    // HTTP 헤더 값에는 원칙적으로 ASCII만 안전하게 담을 수 있다. -> "이력서.pdf"같은 한글/공백을 그대로 넣으면 깨지거나 잘린다.
+    // 그래서 파일명을 URL 인코딩해서 넣는다. URLEncoder 는 공백을 '+' 로 바꾸는데, 파일명에선 '+' 가 그대로 보이면 곤란하므로 %20 으로 치환한다
+
+    // * contentType(MediaType.APPLICATION_OCTET_STREAM) => 힌트
+    // 무슨 파일인지 특정하지 않은 순수 바이너리 라는 뜻
+    // 브라우저가 열 방법을 몰라 저장 쪽으로 기울게 하는 '힌트'일 뿐, 다운로드 확정하지 못한다.
+    // * .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
+    // attachment는 인라인으로 열지말고 무조건 첨부(다운로드)하라는 확실한 지시
+    // filename*(별표) 는 인코딩을 명시하는 최신 문법으로 "저장될 기본 파일명"을 정한다.
+    // 이게 없으면 URL 끝의 UUID 붙음 이름으로 저장돼 버린다. 그래서 원본 이름으로 저장되게 넣는 것 / utf8 뒤에 '' : 언어필드 생략 (ex utf8'ko')
+    @Operation(summary = "첨부파일 다운로드",  description = "저장된 파일 이름으로 첨부파일을 내려받는다. Content-Disposition: attachment 로 브라우저가 다운로드하게 한다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "파일 다운로드",
-                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                    schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "404", description = "해당 이름의 파일이 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "파일 다운로드",  content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,  schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "404", description = "해당 이름의 파일이 없음",  content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/file/download/{fileName}")
     public ResponseEntity<Resource> downloadFile(
@@ -119,23 +125,9 @@ public class BoardApiController {
             @PathVariable String fileName) {
         Resource resource = fileService.downloadFile(fileName);
 
-        // * 한글 파일명 인코딩
-        // HTTP 헤더 값에는 원칙적으로 ASCII만 안전하게 담을 수 있다.
-        // -> "이력서.pdf"같은 한글/공백을 그대로 넣으면 깨지거나 잘린다.
-        // 그래서 파일명을 URL 인코딩해서 넣는다.
-        //   - URLEncoder 는 공백을 '+' 로 바꾸는데, 파일명에선 '+' 가 그대로 보이면 곤란하므로 %20 으로 치환한다
         String encodedFileName = URLEncoder.encode(Objects.requireNonNull(resource.getFilename()), StandardCharsets.UTF_8)
                 .replaceAll("\\+", "%20");
 
-        // * contentType(MediaType.APPLICATION_OCTET_STREAM) => 힌트
-        // 무슨 파일인지 특정하지 않은 순수 바이너리 라는 뜻
-        // 브라우저가 열 방법을 몰라 저장 쪽으로 기울게 하는 '힌트'일 뿐, 다운로드 확정하지 못한다.
-        // (확자자 등에 따라 브라우저가 그냥 열어버릴 수도 있다.)
-        // * .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
-        // attachment는 인라인으로 열지말고 무조건 첨부(다운로드)하라는 확실한 지시
-        // filename*(별표) 는 인코딩을 명시하는 최신 문법으로 "저장될 기본 파일명"을 정한다.
-        // 이게 없으면 URL 끝의 UUID 붙음 이름으로 저장돼 버린다. 그래서 원본 이름으로 저장되게 넣는 것
-        // utf8 뒤에 '' : 언어필드 생략 (ex utf8'ko')
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
@@ -179,5 +171,17 @@ public class BoardApiController {
          return boardService.searchBoard(dto, pageable);
     }
 
-
+    @Operation(summary = "게시글 상세 + 댓글", description = "게시글 한 건과 그에 달린 댓글 목록을 fetch join 으로 한 번에 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 id 의 게시글이 없음",  content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/{id}/with-comments")
+    public BoardWithCommentsResponseDto  getBoardWithComments(
+            @Parameter(description = "조회할 게시글 id", example = "1")
+            @PathVariable long id
+    ) {
+        Board board = boardService.getBoardWithComments(id);
+        return boardMapper.toBoardWithCommentsDto(board);
+    }
 }
