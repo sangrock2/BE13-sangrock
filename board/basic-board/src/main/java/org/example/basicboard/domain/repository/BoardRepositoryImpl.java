@@ -11,8 +11,10 @@ import org.example.basicboard.domain.entity.Board;
 import org.example.basicboard.domain.entity.QBoard;
 import org.example.basicboard.domain.entity.QComment;
 import org.example.basicboard.domain.entity.QMember;
+import org.example.basicboard.dto.BoardAuthorStatsResponseDto;
 import org.example.basicboard.dto.BoardListItemResponseDto;
 import org.example.basicboard.dto.BoardSearchRequestDto;
+import org.example.basicboard.dto.QBoardAuthorStatsResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -31,6 +33,8 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
     private static final QBoard board = QBoard.board;
     private static final QComment comment = QComment.comment;
     private static final QMember member = QMember.member;
+
+
 
     @Override
     public Page<BoardListItemResponseDto> searchBoards(BoardSearchRequestDto condition, Pageable pageable) {
@@ -83,6 +87,18 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
         Board result = queryFactory.selectFrom(board).distinct().leftJoin(board.comments, comment).fetchJoin().where(board.id.eq(id)).fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public List<BoardAuthorStatsResponseDto> countByBoardAuthor(long minCount) {
+        return queryFactory
+                .select(new QBoardAuthorStatsResponseDto(board.userId, member.userName, board.count()))
+                .from(board)
+                .leftJoin(member).on(board.userId.eq(member.userId))
+                .groupBy(board.userId, member.userName)
+                .having(board.count().goe(minCount))
+                .orderBy(board.count().desc())
+                .fetch();
     }
 
     // 제목 부분 일치

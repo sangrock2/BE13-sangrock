@@ -1,9 +1,9 @@
 package org.example.basicboard.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.example.basicboard.constant.SessionConst;
+import org.example.basicboard.dto.CommentDeleteRequestDto;
 import org.example.basicboard.dto.CommentUpdateRequestDto;
 import org.example.basicboard.dto.CommentWriteRequestDto;
 import org.example.basicboard.service.CommentService;
@@ -27,9 +27,7 @@ public class CommentApiController {
     }
 
     @DeleteMapping("/{commentId}")
-    public void deleteComment(@PathVariable long commentId, HttpSession session) {
-        String userId = (String) session.getAttribute(SessionConst.USER_ID);
-
-        commentService.deleteComment(commentId, userId);
+    public void deleteComment(@PathVariable long commentId, @RequestBody CommentDeleteRequestDto dto) {
+        commentService.deleteComment(commentId, dto);
     }
 }

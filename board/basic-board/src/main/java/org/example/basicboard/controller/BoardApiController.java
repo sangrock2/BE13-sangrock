@@ -184,4 +184,13 @@ public class BoardApiController {
         Board board = boardService.getBoardWithComments(id);
         return boardMapper.toBoardWithCommentsDto(board);
     }
+
+    @Operation(summary = "작성자별 게시글 수 통계", description = "작성자별로게시글 수를 집계하고, minCount이상 쓴 작성자만 많이 쓴 순으로 내려준다")
+    @GetMapping("/stats/authors")
+    public List<BoardAuthorStatsResponseDto> getAuthors(
+            @Parameter(description = "최소 게시글 수 (이 값 이상 쓴 작성자만)", example = "1")
+            @RequestParam(defaultValue = "1") long minCount
+    ) {
+        return boardService.getAuthorStats(minCount);
+    }
 }

@@ -2,10 +2,7 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
     margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 32px 16px;
     min-height: 100vh;
 }
 
@@ -16,6 +13,7 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     width: 80%;
     max-width: 800px;
+    margin: 0 auto;
 }
 
 .article-header {
@@ -70,24 +68,14 @@ h1 {
     background-color: #007bb5;
 }
 
-/* 버튼이 비활성화된 경우 스타일 */
 #editBtn:disabled {
-    background-color: #cccccc; /* 비활성화 상태의 색 */
-    cursor: not-allowed; /* 커서를 변경하여 비활성화된 느낌을 줌 */
-    color: #666666; /* 텍스트 색상 변경 */
-}
-
-
-
-/* 버튼이 비활성화된 경우 스타일 */
-#editBtn:disabled {
-    background-color: #cccccc; /* 비활성화 상태의 색 */
-    cursor: not-allowed; /* 커서를 변경하여 비활성화된 느낌을 줌 */
-    color: #666666; /* 텍스트 색상 변경 */
+    background-color: #cccccc;
+    cursor: not-allowed;
+    color: #666666;
 }
 
 #deleteBtn {
-    background-color: #f44336; /* 빨간색 배경 */
+    background-color: #f44336;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -96,30 +84,22 @@ h1 {
     font-size: 1em;
 }
 
-/* Hover 시 배경 색상 변경 */
 #deleteBtn:hover {
-    background-color: #e53935; /* 조금 더 어두운 빨간색 */
+    background-color: #e53935;
 }
 
-/* 버튼이 비활성화된 경우 스타일 */
 #deleteBtn:disabled {
-    background-color: #cccccc; /* 비활성화 상태의 색 */
-    cursor: not-allowed; /* 커서를 변경하여 비활성화된 느낌을 줌 */
-    color: #666666; /* 텍스트 색상 변경 */
+    background-color: #cccccc;
+    cursor: not-allowed;
+    color: #666666;
 }
 
-/* =====================================================================
-   댓글 영역 스타일
-   ===================================================================== */
-
-/* 댓글 섹션 전체 - 본문/버튼 영역과 구분선으로 나눈다 */
 .comment-section {
     margin-top: 30px;
     border-top: 1px solid #ddd;
     padding-top: 15px;
 }
 
-/* 제목 옆 댓글 개수 배지 (목록 화면의 .comment-count 와 같은 초록 톤) */
 .comment-total {
     display: inline-block;
     min-width: 22px;
@@ -132,54 +112,87 @@ h1 {
     vertical-align: middle;
 }
 
-/* 배지가 비어있으면(댓글 0개 - JS 가 빈 문자열을 넣음) 배지 자체를 숨긴다
-   - :empty = "자식(텍스트 포함)이 하나도 없는" 요소를 고르는 CSS 가상 클래스
-   - 이게 없으면 min-width/padding/배경색 때문에 내용 없는 초록 알약이 어색하게 남는다 */
 .comment-total:empty {
     display: none;
 }
 
-/* 댓글 목록 - 기본 불릿 제거 */
 #commentList {
     list-style: none;
     padding: 0;
     margin: 0 0 15px 0;
 }
 
-/* 댓글 한 개 */
 .comment-item {
     padding: 10px 5px;
     border-bottom: 1px solid #eee;
 }
 
-/* 작성자 + 작성일 줄 */
 .comment-meta {
+    margin-bottom: 4px;
     font-size: 0.85em;
     color: #666;
-    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.comment-meta-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .comment-date {
-    margin-left: 8px;
     color: #999;
 }
 
-/* 댓글 본문 */
 .comment-content {
     margin: 0;
     color: #333;
     line-height: 1.5;
-    white-space: pre-wrap; /* 줄바꿈 입력을 그대로 보여준다 */
+    white-space: pre-wrap;
 }
 
-/* 댓글 없음 안내 */
+.comment-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.comment-edit-btn,
+.comment-save-btn {
+    background-color: #008CBA;
+}
+
+.comment-edit-btn:hover,
+.comment-save-btn:hover {
+    background-color: #007bb5;
+}
+
+.comment-delete-btn,
+.comment-cancel-btn {
+    background-color: #f44336;
+}
+
+.comment-delete-btn:hover,
+.comment-cancel-btn:hover {
+    background-color: #e53935;
+}
+
+.comment-actions .btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    color: #666666;
+}
+
 .no-comment {
     color: #999;
     text-align: center;
     padding: 15px 0;
 }
 
-/* 작성 폼 - 입력칸과 버튼을 세로로 쌓고 버튼은 오른쪽 정렬 */
 .comment-form {
     display: flex;
     flex-direction: column;
@@ -187,13 +200,54 @@ h1 {
     gap: 8px;
 }
 
-.comment-form textarea {
+.comment-form textarea,
+.comment-edit-box textarea {
     width: 100%;
-    box-sizing: border-box; /* padding 포함 너비 계산 - 컨테이너를 넘치지 않게 */
+    box-sizing: border-box;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-family: inherit;
     font-size: 1em;
-    resize: vertical; /* 세로 크기만 조절 허용 */
+    resize: vertical;
+}
+
+.comment-edit-box {
+    margin-top: 10px;
+}
+
+.comment-edit-actions {
+    margin-top: 8px;
+    text-align: right;
+}
+
+.comment-edit-actions .btn {
+    margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 16px 10px;
+    }
+
+    .container {
+        width: 100%;
+    }
+
+    .article-footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .article-footer .btn,
+    .comment-edit-actions .btn {
+        margin-left: 0;
+    }
+
+    .comment-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

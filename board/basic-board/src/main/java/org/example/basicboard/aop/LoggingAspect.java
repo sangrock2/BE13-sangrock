@@ -1,6 +1,7 @@
 package org.example.basicboard.aop;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -17,26 +18,37 @@ import java.util.Arrays;
 // AOP 규칙을 담고 있다는 표시일 뿐, 스프링이 관리하는 빈으로 등록해주지 않는다
 // 스프링 컨테이너에 빈으로 등록해야, 스프링이 이 Aspect를 찾아서 실제로 적용한다
 
+// 표현식 해석
+// execution : 메서드 실행 지점을 대상으로 한다는 지시
+// 가장 앞 * : 반환 타입은 무엇이든지 상관없다
+// 뒤에 * : 그 안의 모든 클래스의 모든 매서드
+// (..) : 매서드 파라미터는 개수/타입 상관없이 모두
+
+// @Before : 대상 메서드 실행 직전에만 실행
+// @AfterReturning : 대상 메서드가 정상 반환된 후 실행
+// @AfterThrowing : 대상 메서드가 예외를 던졌을 때 실행
+// @After : 정상/예외 상관없이 끝나면 항상 실행
+// @Around : 대상 메서드 실행을 통째로 감싼다. 전/후/예외 모두 한 매서드에서 제어
+
+// * System.out.println -> @Slf4j 로거로 교체한 이유
+// (1) 레벨이 없다 : 전부 같은 급이라, 운영에서 "디버그성 출력만 끄기" 같은 제어가 불가능하다.
+// (2) 맥락이 없다 : 시간/스레드/클래스 이름이 자동으로 안 붙는다. (문제 추적이 힘들다)
+// (3) 목적지가 고정이다 : 콘솔에만 나간다. 파일 저장, 날짜별 분할(롤링) 같은 걸 못 한다.
+// (4) 성능에 불리하다 : 동기 출력이라 요청이 몰리면 병목이 될 수 있다.
+// # log.info(...) 로 바꾸면 위 네 가지가 전부 해결된다 - 출력 형태를 보면 차이가 바로 보인다:
+//     System.out : [요청 시작] GET /api/boards -> ...
+//     log.info   : 2026-07-14T10:00:00.123+09:00  INFO 12345 --- [nio-8080-exec-1] c.e.s.b.aop.LoggingAspect : [요청 시작] ...
+//                  └ 시간 ──────────────────────┘ └레벨┘ └PID┘  └── 스레드 ──────┘ └── 어느 클래스가 찍었나 ┘
+
 @Aspect
+@Slf4j
 @Component
 public class LoggingAspect {
-    // 표현식 해석
-    // execution : 메서드 실행 지점을 대상으로 한다는 지시
-    // 가장 앞 * : 반환 타입은 무엇이든지 상관없다
-    // 뒤에 * : 그 안의 모든 클래스의 모든 매서드
-    // (..) : 매서드 파라미터는 개수/타입 상관없이 모두
+
     @Pointcut("execution(* org.example.basicboard.controller..*(..))")
     public void controllerLog() {
         // 매서드 본문은 비워둔다, 실제 로직이 아니라 대상을 가르키는 이름표 역할만 하기 때문
     }
-
-    // @Around : 언제/무엇을 할지 정의하는 어드바이스
-    // 어드바이스에는 5가지 종류가 있다
-    // @Before : 대상 메서드 실행 직전에만 실행
-    // @AfterReturning : 대상 메서드가 정상 반환된 후 실행
-    // @AfterThrowing : 대상 메서드가 예외를 던졌을 때 실행
-    // @After : 정상/예외 상관없이 끝나면 항상 실행
-    // @Around : 대상 메서드 실행을 통째로 감싼다. 전/후/예외 모두 한 매서드에서 제어
 
     @Around("controllerLog()")
     public Object logRequest(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -52,26 +64,25 @@ public class LoggingAspect {
             httpInfo = request.getMethod() + "." + request.getRequestURL();
         }
 
-        System.out.println("[Start Request]" + httpInfo + " ->" + method);
-        System.out.println("[Parameter]" + Arrays.toString(joinPoint.getArgs()));
+        log.info("[Start Request] {} -> {}", httpInfo, method);
+        log.info("[Parameter] {} ", Arrays.toString(joinPoint.getArgs()));
 
         long startTime = System.currentTimeMillis();
 
         try {
-            // 실행
-            Object result = joinPoint.proceed();
+            Object result = joinPoint.proceed(); // 실행
 
-            // 실행 종료(응답)
-            long endTime = System.currentTimeMillis();
-            System.out.println("[End Request]" + method + " :" + (endTime - startTime) + "ms");
+            long endTime = System.currentTimeMillis(); // 실행 종료 (응답)
+
+            log.info("[End Request] {} : {} ms", method, endTime - startTime);
 
             return result;
         } catch (Throwable e) {
             long endTime = System.currentTimeMillis();
-            System.out.println("[Fail Request]" + method + " :" + (endTime - startTime) + "ms" + " : Exception: " + e.getMessage());
 
-            // 잡은 예외를 다시 던진다, 여기서 예외를 삼켜버리면 컨트롤러가 정상 처리된 것처럼 보여 버그가
-            throw e;
+            log.warn("[Fail Request] {} : {} ms : Exception {}", method, (endTime - startTime), e.getMessage());
+
+            throw e; // 잡은 예외를 다시 던진다, 여기서 예외를 삼켜버리면 컨트롤러가 정상 처리된 것처럼 보여 버그가
         }
     }
 }

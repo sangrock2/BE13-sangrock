@@ -1,5 +1,6 @@
 package org.example.basicboard.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.basicboard.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // 예외를 적절한 HTTP 응답으로 바꾸는 "웹 특화 작업" -> @RestControllerAdvice (이 클래스)
 // (억지로 AOP 로 예외 처리도 되긴 하지만, 위 (1)(2) 를 전부 직접 만들어야 해서 손해다)
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -59,6 +61,7 @@ public class GlobalExceptionHandler {
     // 에러 상황에서는 상태 코드를 4xx/4xx 등으로 바꿔야 하므로 ResponseEntity를 사용한다
     @ExceptionHandler(DuplicateUserIdException.class)
     public ResponseEntity<ErrorResponseDto> duplicateUserIdException(DuplicateUserIdException e) {
+        log.warn("409 Response : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponseDto(HttpStatus.CONFLICT.value(), e.getMessage()));
@@ -66,6 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BoardNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> boardNotFoundException(BoardNotFoundException e) {
+        log.warn("404 Response : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponseDto(HttpStatus.NOT_FOUND.value(), e.getMessage()));
@@ -74,6 +78,7 @@ public class GlobalExceptionHandler {
     // 최후의 보루 핸들러 : 위에서 처리하지 못한 모든 예외를 잡는다
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> exception(Exception e) {
+        log.error("500 Response", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponseDto(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error"));

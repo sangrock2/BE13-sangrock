@@ -3,10 +3,7 @@ package org.example.basicboard.service;
 import lombok.RequiredArgsConstructor;
 import org.example.basicboard.domain.entity.Board;
 import org.example.basicboard.domain.repository.BoardRepository;
-import org.example.basicboard.dto.BoardDeleteRequestDto;
-import org.example.basicboard.dto.BoardListItemResponseDto;
-import org.example.basicboard.dto.BoardSearchRequestDto;
-import org.example.basicboard.dto.BoardUpdateRequestDto;
+import org.example.basicboard.dto.*;
 import org.example.basicboard.exception.BoardNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -85,5 +82,9 @@ public class BoardService {
 
     public Board getBoardWithComments(long id) {
         return boardRepository.findWithComments(id).orElseThrow(() -> new BoardNotFoundException("[BOARD] Board not found : " + id));
+    }
+
+    public List<BoardAuthorStatsResponseDto> getAuthorStats(long minCount) {
+        return boardRepository.countByBoardAuthor(minCount);
     }
 }
