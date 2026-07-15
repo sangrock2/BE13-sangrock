@@ -1,6 +1,7 @@
 package org.example.basicboard.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.basicboard.domain.entity.Board;
 import org.example.basicboard.domain.repository.BoardRepository;
 import org.example.basicboard.dto.*;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,7 +26,7 @@ public class BoardService {
     private final FileService fileService;
 
     public List<Board> getBoardList(int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page-1, size, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by("id").descending());
 
         return boardRepository.findAll(pageRequest).getContent();
     }
@@ -37,15 +39,17 @@ public class BoardService {
     public void saveBoard(String userId, String title, String content, MultipartFile file) {
         String filePath = fileService.storeFile(file);
 
-        boardRepository.save(
-            Board.builder()
-                    .userId(userId)
-                    .title(title)
-                    .content(content)
-                    .filePath(filePath)
-                    .created(LocalDateTime.now())
-                    .build()
+        Board savedBoard = boardRepository.save(
+                Board.builder()
+                        .userId(userId)
+                        .title(title)
+                        .content(content)
+                        .filePath(filePath)
+                        .created(LocalDateTime.now())
+                        .build()
         );
+
+        log.info("Board created: boardId={}, userId={}, hasFile={}", savedBoard.getId(), userId, filePath != null);
     }
 
     public Board getBoardDetail(long id) {
@@ -64,6 +68,7 @@ public class BoardService {
         }
 
         board.update(dto.getTitle(), dto.getContent(), filePath);
+        log.info("Board updated: boardId={}, hasFileChange={}, hasFile={}", id, dto.isFileFlag(), filePath != null);
     }
 
     @Transactional
@@ -74,6 +79,7 @@ public class BoardService {
 
         boardRepository.deleteById(id);
         fileService.deleteFile(dto.getFilePath());
+        log.info("Board deleted: boardId={}, hadFile={}", id, dto.getFilePath() != null && !dto.getFilePath().isBlank());
     }
 
     public Page<BoardListItemResponseDto> searchBoard(BoardSearchRequestDto dto, Pageable pageable) {

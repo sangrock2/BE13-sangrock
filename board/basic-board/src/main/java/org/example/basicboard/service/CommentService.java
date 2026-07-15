@@ -34,7 +34,8 @@ public class CommentService {
                 .board(board)
                 .build();
 
-        commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
+        log.info("Comment created: commentId={}, boardId={}, userId={}", savedComment.getId(), boardId, dto.getUserId());
     }
 
     @Transactional
@@ -42,10 +43,12 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new BoardNotFoundException("[COMMENT] comment not found : " + commentId));
 
         if (!comment.getUserId().equals(dto.getUserId())) {
+            log.warn("Comment update denied: commentId={}, requestUserId={}, ownerUserId={}", commentId, dto.getUserId(), comment.getUserId());
             throw new IllegalArgumentException("[COMMENT] comment user id mismatch");
         }
 
         comment.update(dto.getContent());
+        log.info("Comment updated: commentId={}, userId={}", commentId, dto.getUserId());
     }
 
     @Transactional
@@ -53,9 +56,11 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new IllegalArgumentException("[COMMENT] comment not found : " + commentId));
 
         if (!comment.getUserId().equals(dto.getUserId())) {
+            log.warn("Comment delete denied: commentId={}, requestUserId={}, ownerUserId={}", commentId, dto.getUserId(), comment.getUserId());
             throw new IllegalArgumentException("[COMMENT] comment user id mismatch");
         }
 
         commentRepository.deleteById(commentId);
+        log.info("Comment deleted: commentId={}, userId={}", commentId, dto.getUserId());
     }
 }

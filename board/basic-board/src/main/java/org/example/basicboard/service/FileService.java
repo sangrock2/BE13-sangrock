@@ -1,5 +1,6 @@
 package org.example.basicboard.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.MalformedInputException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class FileService {
 
@@ -36,6 +38,7 @@ public class FileService {
 
             return dest.getPath();
         } catch (Exception e) {
+            log.error("File store failed: originalFileName={}", file.getOriginalFilename(), e);
             throw new IllegalStateException("failed to store file", e);
         }
     }
@@ -48,11 +51,13 @@ public class FileService {
             Resource resource = new UrlResource(file.toURI());
 
             if (!resource.exists() || !resource.isReadable()) {
+                log.warn("File download failed: fileName={}", fileName);
                 throw new IOException("Could not read file: " + fileName);
             }
 
             return resource;
         } catch (MalformedInputException e) {
+            log.error("File download failed: fileName={}", fileName, e);
             throw new IllegalStateException("failed to download file: " + fileName, e);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -70,6 +75,8 @@ public class FileService {
             return;
         }
 
-        file.delete();
+        if (!file.delete()) {
+            log.warn("File delete failed: filePath={}", filePath);
+        }
     }
 }

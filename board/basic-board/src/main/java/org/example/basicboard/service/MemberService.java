@@ -50,13 +50,13 @@ public class MemberService {
     public void join(MemberJoinRequestDto dto) {
         // 아이디 중복 체크
         if (memberRepository.existsByUserId(dto.getUserId())) {
-            log.warn("회원 가입 실패(아이디 중복) : userId={}", dto.getUserId());
+            log.warn("Member registration failed: duplicate userId={}", dto.getUserId());
 
             throw new DuplicateUserIdException("[회원가입] 이미 존재하는 아이디입니다.");
         }
 
         memberRepository.save(memberMapper.toEntity(dto));
-        log.info("회원가입 완료 : userId={}, userName={}", dto.getUserId(), dto.getUserName());
+        log.info("Member registered: userId={}, userName={}", dto.getUserId(), dto.getUserName());
     }
 
     // Optional : 값이 없을 수도 있다를 타입으로 알려주는 매퍼 / NPE(NullPointerException) 예방
@@ -92,9 +92,9 @@ public class MemberService {
                 .filter(entity -> entity.getPassword().equals(dto.getPassword()));
 
         if (result.isEmpty()) {
-            log.warn("로그인 실패 : userId={}", dto.getUsername());
+            log.warn("Login failed: userId={}", dto.getUsername());
         } else {
-            log.info("로그인 성공 : username={}", dto.getUsername());
+            log.info("Login succeeded: username={}", dto.getUsername());
         }
 
         return result;
