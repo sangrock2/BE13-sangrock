@@ -13,6 +13,9 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
   file:
     upload-dir: ./uploads
 
@@ -20,7 +23,7 @@ logging:
   level:
     root: info
     org.example.basicboard: debug
-    org.hibernate.sql: debug
+    org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
 springdoc:

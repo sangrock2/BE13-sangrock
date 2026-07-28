@@ -2,11 +2,124 @@ package org.example.basicboard.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.basicboard.domain.entity.Board;
+import org.example.basicboard.domain.repository.BoardRepository;
+import org.example.basicboard.domain.repository.CommentRepository;
+import org.example.basicboard.domain.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+// @Scheduled - 정해진 시각/주기에 메서드를 자동 실행하는 배치 작업
+// 메인 클래스에 @EnableScheduling 이 있어야한다.
+// 이 클래스가 스프링 빈이어야 한다(@Component)
+// @Scheduled 메서드의 형태 : 파라미터 없음 + 반환 void / 정해진 시각에 "스프링이" 호출하는 것이라, 인자를 넘겨줄 주체도 반환값을 받을 주체도 없다.
+
+// 실행 시점을 지정하는 3가지 방식
+// cron : 달력 기준 특정 시각(매일 09:00, 매주 월요일)
+// fixedDelay : 이전 실행이 끝난 뒤 ms 쉬고 다시 실행
+// fixedRate : 이전 실행이 시작된 뒤 ms 마다 실행
+// fixedDelay vs fixedRate: 작업이 오래 걸릴 때 차이가 난다
+// 예) 작업 3분 + 간격 5분 → fixedDelay 는 "끝나고 5분 뒤"(8분 주기), fixedRate 는 "시작 후 5분마다"(5분 주기)
+//  겹치면 안 되는 작업(정리/집계)은 fixedDelay 가 안전하다
+
+// 주의: 기본 스케줄러는 "스레드 1개"다
+// 모든 @Scheduled 작업이 한 줄로 서서 순서대로 돈다 → 한 작업이 오래 걸리면 다른 작업이 밀린다
+// 작업이 많아지면 스레드 풀 설정(spring.task.scheduling.pool.size)으로 늘릴 수 있다
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class BoardBatchScheduler {
+    private MemberRepository memberRepository;
+    private BoardRepository boardRepository;
+    private CommentRepository commentRepository;
 
+    @Value("${spring.file.upload-dir}")
+    private String uploadDir;
+
+    // (1) 일일 현황 리포트 - cron 방식
+    // cron 표현식 읽는 법 - "0 0 9 * * *" = 매일 09:00:00
+    //
+    //     "0   0   9   *   *   *"
+    //      │   │   │   │   │   └ 요일 (0~7, 0과 7은 일요일. * = 모든 요일)
+    //      │   │   │   │   └──── 월   (1~12)
+    //      │   │   │   └──────── 일   (1~31)
+    //      │   │   └──────────── 시   (0~23) → 9시
+    //      │   └──────────────── 분   (0~59) → 0분
+    //      └──────────────────── 초   (0~59) → 0초
+    // - 스프링 cron은 "6자리"다. (맨 앞에 '초'가 있다.) ex) 리눅스 crontab 은 5자리(분부터) crontab예제를 그대로 복사하면 한 칸씩 밀려 어뚱한 시각에 돈다.
+    //   # 요일은 숫자로도, 영문으로도 쓸 수 있다 - 둘은 완전히 같은 뜻이다
+    //     숫자: 0 또는 7=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토   ("0 0 4 * * 1" = 매주 월요일 04:00)
+    //     영문: SUN MON TUE WED THU FRI SAT (대소문자 무관)
+    //     범위/목록: "MON-FRI"(평일), "1-5"(같은 뜻), "MON,WED,FRI" / "1,3,5"
+    //       예) "0 0 9 * * 0-3"   = 일(0)~수(3)요일 09:00  (0 이 일요일임에 주의 - "월~수"가 아니다!)
+    //       예) "0 0 9 * * SUN-WED" = 같은 뜻을 영문으로 - 어느 요일인지 읽는 순간 명확하다
+    //       조합도 가능: "0-3,6" (일~수 + 토)
+
+    // * zone 옵션 - 시각의 기준 시간대를 정한다.
+    // - 지정하지 않으면 "서버(JVM)의 시간대"를 따른다. -> 해외 클라우드 서버(UTC)에 배포하면, "9시에 돌아라"가 한국 시간 18시에 도는 사고가 난다.
+
+    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
+    public void dailyReport() {
+        log.info("daily report");
+
+        long members = memberRepository.count();
+        long boards = boardRepository.count();
+        long comments = commentRepository.count();
+
+        log.info("[Daily Report] members: {} people, boards: {} posts, comment: {} comments", members, boards, comments);
+    }
+
+    // 고아 첨부파일 점검 - fixedDelay 방식
+    // 고아 파일 : 디스크에는 있는데 어느 게시글도 참조하지 않는 파일
+    // 생기는 경로: FileService.deleteFile 이 실패했을 때(warn 로그 남기던 그 경우), 또는 파일 저장 후 게시글 저장(트랜잭션)이 실패해 롤백됐을 때 등
+    // 파일은 트랜잭션 롤백 대상이 아니라서(DB 가 아니니까) 이런 불일치가 조금씩 쌓일 수 있다
+    // 그래서 주기적으로 "DB 와 디스크를 대조"하는 배치를 두는 것이다 (실무의 전형적인 정리 배치 패턴)
+
+    // 왜 삭제하지 않고 warn 로그만 남기나?
+    // 지금 업로드 중인 파일은 디스크에 먼저 생기고 게시글 저장은 그 다음이다
+    // 그 찰나에 배치가 돌면 정상 파일을 고아로 오판해 지워버릴 수 있다 (배치 삭제의 고전적 사고)
+
+    // initialDelay / fixedDelay ( 단위 ms )
+    // initialDelay : 10초 / 앱이 뜨고 10초 뒤 첫 실행
+    // fixedDelay : 1시간 / 그 뒤로는 이전 실행이 끝난 시점부터 1시간 간격으로 반복
+
+    @Scheduled(initialDelay = 10_000, fixedDelay = 3_600_000)
+    public void reportOrphanFiles() {
+        log.info("[Orphan File Check] Batch started");
+
+        File dir = new File(uploadDir).getAbsoluteFile();
+        File[] files = dir.listFiles();
+
+        if (files == null || files.length == 0) {
+            log.info("[Orphan File Check] Upload directory is empty");
+            return;
+        }
+
+        Set<String> refrenced = boardRepository.findAll().stream()
+                .map(Board::getFilePath)
+                .filter(Objects::nonNull)
+                .map(path -> new File(path).getName())
+                .collect(Collectors.toSet());
+
+        int orphanCount = 0;
+
+        for (File file : files) {
+            if (!refrenced.contains(file.getName())) {
+                orphanCount++;
+                log.warn("[Orphan File Find] Does not reference any posts. : {} ", file.getName());
+            }
+        }
+
+        log.info("[Orphan File Check Completely] {} orphan files out of {} total", orphanCount, files.length);
+    }
+
+    // DB 가 참조 중인 파일 이름 집합을 만든다 (경로 형태가 제각각일 수 있어 "파일 이름"으로 비교)
+    // List 가 아니라 Set 인 이유: contains 검사가 목록 크기와 무관하게 빠르다 (파일 수 × 글 수 반복을 피함)
 }
